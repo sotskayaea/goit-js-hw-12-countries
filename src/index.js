@@ -13,6 +13,7 @@ refs.input.addEventListener('input', debounce(e => {
 }, 500))
 
 function onInputValue (e){
+  OnResetStyleCountryDiv()
   e.preventDefault();
   const value = e.target.value;
   if (!value) {
@@ -23,7 +24,7 @@ function onInputValue (e){
 }
 
 function searchCountry (value){
-  OnResetStyleCountryDiv()
+
   API.fetchCountry(value).then(country => {
     if(!country) {
       return;
