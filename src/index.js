@@ -34,6 +34,7 @@ function searchCountry (value){
       pnotify({
         title: 'Ошибка',
         text: message,
+        delay:1000,
       });
     } else if (country.length >= 2 && country.length <= 10) {
       createCountryListMarkup(country);
@@ -44,14 +45,20 @@ function searchCountry (value){
       pnotify({
         title: 'Ошибка',
         text: 'Некоректный запрос или такой страны нет в списке',
-        delay: 500,
+        delay: 1000,
       });
     }
+  }).catch(error => {
+    onError();
   })
 }
 
-function error(){
-  console.log('error😱')
+function onError(){
+  pnotify({
+    title: 'Критическая ошибка',
+    text: 'Что-то пошло не так.',
+    delay: 500,
+  });
 }
 
 function createMarkup (country){
