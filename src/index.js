@@ -1,82 +1,83 @@
 import './sass/main.scss';
-import markupCountry from './templates/countries-markup.hbs'
-import countryList from './templates/country-list.hbs'
-import API from './js/fetchCountries.js'
-import getRefs from './js/get-refs.js'
-import { debounce } from "debounce";
 import pnotify from './js/pnotify';
+import NewApi from './js/fetchCountries.js';
+import countryCard from './templates/countryCard.hbs';
+import listCountries from './templates/list.hbs';
+import debounce from 'lodash.debounce';
 
-const refs = getRefs();
 
-refs.input.addEventListener('input', debounce(e => {
-  onInputValue(e);
-}, 500))
-
-function onInputValue (e){
-  OnResetStyleCountryDiv()
-  e.preventDefault();
-  const value = e.target.value;
-  if (!value) {
-    clearMarkup();
-    return;
-  }
-  searchCountry(value);
+const refs = {
+    input : document.querySelector('.input'),
+    markup : document.querySelector('.markup-country')
 }
 
-function searchCountry (value){
+const api = new NewApi();
 
-  API.fetchCountry(value).then(country => {
-    if(!country) {
-      return;
-    } else if (country.length > 10) {
-      clearMarkup();
-      const message = 'Найдено слишком много совпадений, уточните ваш запрос'
+refs.input.addEventListener('input', debounce(onSearchCountry, 500))
+
+function onSearchCountry(e){
+    e.preventDefault();
+    const value = e.target.value;
+    if(!value){
+        onClearMarkup();
+        return  
+    }
+    
+    onFindCountry(value);
+    onClearMarkup();
+
+}
+
+function onFindCountry(value){
+    api.fetchCountries(value).then(query => {
+        if (!query){
+            return
+        } else if (query.lenght > 10){
+            onClearMarkup();
+            const message = 'Найдено слишком много совпадений, уточните ваш запрос'
       pnotify({
         title: 'Ошибка',
         text: message,
         delay:1000,
       });
-    } else if (country.length >= 2 && country.length <= 10) {
-      createCountryListMarkup(country);
-    } else if (country.length === 1) {
-      onStyleCountryDiv();
-      createMarkup(country);
-    } else {
-      pnotify({
-        title: 'Ошибка',
-        text: 'Некоректный запрос или такой страны нет в списке',
-        delay: 1000,
-      });
-    }
-  }).catch(error => {
-    onError();
-  })
+    } else if (query.length >= 2 && query.length <= 10) {
+        onMakeListCountry(query);
+      } else if (query.length === 1) {
+        onClearMarkup();
+        onMakeCountryCard(query);
+      } else {
+        pnotify({
+          title: 'Ошибка',
+          text: 'Некоректный запрос или такой страны нет в списке',
+          delay: 1000,
+        });
+      }
+    }).catch(error => {
+      onError();
+    });
+
+}
+  
+  function onError(){
+    pnotify({
+      title: 'Критическая ошибка',
+      text: 'Что-то пошло не так.',
+      delay: 500,
+    });
+} 
+
+function onMakeListCountry(query){
+    const list = listCountries(query);
+    refs.markup.innerHTML = list; 
+
 }
 
-function onError(){
-  pnotify({
-    title: 'Критическая ошибка',
-    text: 'Что-то пошло не так.',
-    delay: 500,
-  });
+function onMakeCountryCard(query){
+    const card = countryCard(query);
+    refs.markup.innerHTML = card;
+
 }
 
-function createMarkup (country){
-  const markup = markupCountry(country);
-  refs.markup.innerHTML = markup;
-}
-
-function createCountryListMarkup(list){
-  const markup = countryList(list);
-  refs.markup.innerHTML = markup;
-}
-
-function clearMarkup(){
-  refs.markup.innerHTML = '';
-}
-function onStyleCountryDiv (){
-  refs.markupCountry.classList.add('opacity');
-}
-function OnResetStyleCountryDiv(){
-  refs.markupCountry.classList.remove('opacity');
+function onClearMarkup(){
+    refs.markup.innerHTML = '';
 }
